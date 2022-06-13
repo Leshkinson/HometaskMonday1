@@ -231,6 +231,18 @@ app.put('/posts/:ID', titleValidation, shortDescriptionValidation, contentDescri
         bloggerId: number,
         bloggerName: string
     } | undefined = posts.find(post => post.id === id)
+    const blogger: {id: number, name: string, youtubeUrl: string} | undefined = bloggers.find(blogger => blogger.id === newBloggersID)
+    if (!blogger) {
+        res.status(400).send({
+            errorsMessages: [
+                {
+                    message: "BloggerId not found",
+                    field: "bloggerId"
+                }
+            ]
+        })
+        return;
+    }
     if (!post) {
         res.sendStatus(404)
     }
