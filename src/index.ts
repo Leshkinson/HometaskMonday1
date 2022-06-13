@@ -12,7 +12,7 @@ const myValidationResult = validationResult.withDefaults({
 })
 const isURLPattern: CustomValidator = value => {
     const patternURL = new RegExp(/^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/);
-    if (value !== patternURL) {
+    if (!patternURL.test(value)) {
         throw new Error()
     }
     return true;
@@ -99,6 +99,10 @@ app.get('/bloggers/:ID', (req: Request, res: Response) => {
 
 app.put('/bloggers/:ID', nameValidation, URLValidation, (req: Request, res: Response) => {
     const id = +req.params.ID;
+
+    // const newName = req.body.name;
+    // const newYoutubeUrl = req.body.youtubeUrl;
+    // const patternURL = new RegExp(/^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/);
     const blogger = bloggers.find(blogger => blogger.id === id)
     if (!blogger) {
         res.sendStatus(404)
