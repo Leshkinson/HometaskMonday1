@@ -183,8 +183,8 @@ app.post('/posts', titleValidation, shortDescriptionValidation, contentDescripti
         res.status(400).send({
             errorsMessages: [
                         {
-                            message: "YoutubeUrl has incorrect value",
-                            field: "youtubeUrl"
+                            message: "BloggerId not found",
+                            field: "bloggerId"
                         }
                     ]
                 })
