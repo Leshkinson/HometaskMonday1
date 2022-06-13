@@ -180,7 +180,15 @@ app.post('/posts', titleValidation, shortDescriptionValidation, contentDescripti
     const newBloggersID = req.body.bloggerId;
     const blogger: {id: number, name: string, youtubeUrl: string} | undefined = bloggers.find(blogger => blogger.id === newBloggersID)
     if (!blogger) {
-        res.sendStatus(404)
+        res.status(400).send({
+            errorsMessages: [
+                        {
+                            message: "YoutubeUrl has incorrect value",
+                            field: "youtubeUrl"
+                        }
+                    ]
+                })
+                return;
     }
     const errors = myValidationResult(req);
     if (!errors.isEmpty()) {
