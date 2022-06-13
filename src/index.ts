@@ -1,7 +1,58 @@
 import express,{Request, Response} from 'express';
 import cors from 'cors';
-import bodyParser from 'body-parser'
+import bodyParser from 'body-parser';
+import {body, validationResult, CustomValidator} from 'express-validator';
+const myValidationResult = validationResult.withDefaults({
+    formatter: error => {
+        return {
+            message: error.msg,
+            field: error.param
+        };
+    },
+})
+const isURLPattern: CustomValidator = value => {
+    const patternURL = new RegExp(/^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/);
+    if (value !== patternURL) {
+        throw new Error()
+    }
+    return true;
+}
 
+const nameValidation = body('name').trim()
+    .isLength({max: 15})
+    .withMessage("Name has incorrect length")
+    .notEmpty()
+    .withMessage("Name has incorrect length")
+    .isString()
+    .withMessage("Name has incorrect value");
+const URLValidation = body('youtubeUrl')
+    .isLength({max: 100})
+    .withMessage("YoutubeUrl has incorrect length")
+    .isString()
+    .withMessage("Name has incorrect value")
+    .custom(isURLPattern)
+    .withMessage("YoutubeUrl has incorrect value");
+const titleValidation = body('title')
+    .isLength({max: 30})
+    .withMessage("Title has incorrect length")
+    .notEmpty()
+    .withMessage("Title has incorrect length")
+    .isString()
+    .withMessage("Title has incorrect value");
+const shortDescriptionValidation = body('shortDescription')
+    .isLength({max: 100})
+    .withMessage("ShortDescription has incorrect length")
+    .notEmpty()
+    .withMessage("ShortDescription has incorrect length")
+    .isString()
+    .withMessage("ShortDescription has incorrect value");
+const contentDescriptionValidation = body('content')
+    .isLength({max: 1000})
+    .withMessage("Content has incorrect length")
+    .notEmpty()
+    .withMessage("Content has incorrect length")
+    .isString()
+    .withMessage("Content has incorrect value");
 const app = express();
 const port = process.env.PORT || 7777;
 const bloggers = [{id: 1, name: 'Leshkinson', youtubeUrl: 'https://www.youtube.com/c/Leshkinson'}];
@@ -21,58 +72,15 @@ app.get('/bloggers', (req: Request, res: Response) => {
     res.send(bloggers)
 });
 
-app.post('/bloggers',(req: Request, res: Response) => {
-    const newName = req.body.name;
-    const newYoutubeUrl = req.body.youtubeUrl;
-    const patternURL = new RegExp(/^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/);
-    if(!newName || newName.length > 15) {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Name has incorrect length",
-                    field: "name"
-                }
-            ]
-        })
-        return;
-    }
-    if (typeof newName !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Name has incorrect value",
-                    field: "name"
-                }
-            ]
-        })
-        return;
-    }
-    if (!newYoutubeUrl || newYoutubeUrl.length > 100 || !patternURL.test(newYoutubeUrl)) {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "YoutubeUrl has incorrect length",
-                    field: "youtubeUrl"
-                }
-            ]
-        })
-        return;
-    }
-    if (typeof newYoutubeUrl !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "YoutubeUrl has incorrect value",
-                    field: "youtubeUrl"
-                }
-            ]
-        })
-        return;
-    }
+app.post('/bloggers', nameValidation, URLValidation, (req: Request, res: Response) => {
+        const errors = myValidationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errorsMessages: errors.array({onlyFirstError: true})});
+        }
         const newBlogger = {
             id: +(new Date()),
-            name: newName,
-            youtubeUrl: newYoutubeUrl
+            name: req.body.name,
+            youtubeUrl: req.body.youtubeUrl //newYoutubeUrl
         }
         bloggers.push(newBlogger)
         res.status(201).send(newBlogger)
@@ -89,60 +97,65 @@ app.get('/bloggers/:ID', (req: Request, res: Response) => {
     }
 });
 
-app.put('/bloggers/:ID',(req: Request, res: Response) => {
+app.put('/bloggers/:ID', nameValidation, URLValidation, (req: Request, res: Response) => {
     const id = +req.params.ID;
-    const newName = req.body.name;
-    const newYoutubeUrl = req.body.youtubeUrl;
-    const patternURL = new RegExp(/^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/);
+
+    // const newName = req.body.name;
+    // const newYoutubeUrl = req.body.youtubeUrl;
+    // const patternURL = new RegExp(/^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/);
     const blogger = bloggers.find(blogger => blogger.id === id)
     if (!blogger) {
         res.sendStatus(404)
         return;
     }
-    if(!newName || newName.length > 15) {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Name has incorrect length",
-                    field: "name"
-                }
-            ]
-        })
-        return;
+    const errors = myValidationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errorsMessages: errors.array({onlyFirstError: true})});
     }
-    if (typeof newName !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Name has incorrect value",
-                    field: "name"
-                }
-            ]
-        })
-        return;
-    }
-    if (!newYoutubeUrl || newYoutubeUrl.length > 100 || !patternURL.test(newYoutubeUrl)) {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "YoutubeUrl has incorrect length",
-                    field: "youtubeUrl"
-                }
-            ]
-        })
-        return;
-    }
-    if (typeof newYoutubeUrl !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "YoutubeUrl has incorrect value",
-                    field: "youtubeUrl"
-                }
-            ]
-        })
-        return;
-    }
+    // if(!newName || newName.length > 15) {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "Name has incorrect length",
+    //                 field: "name"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (typeof newName !== 'string') {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "Name has incorrect value",
+    //                 field: "name"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (!newYoutubeUrl || newYoutubeUrl.length > 100 || !patternURL.test(newYoutubeUrl)) {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "YoutubeUrl has incorrect length",
+    //                 field: "youtubeUrl"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (typeof newYoutubeUrl !== 'string') {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "YoutubeUrl has incorrect value",
+    //                 field: "youtubeUrl"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
     blogger.name = req.body.name;
     blogger.youtubeUrl = req.body.youtubeUrl
     res.sendStatus(204)
@@ -163,86 +176,90 @@ app.get('/posts', (req: Request, res: Response) => {
     res.send(posts);
 })
 
-app.post('/posts',(req: Request, res: Response) => {
-    const newTitlePost = req.body.title;
-    const newShortDescPost = req.body.shortDescription;
-    const newContentPost = req.body.content;
+app.post('/posts', titleValidation, shortDescriptionValidation, contentDescriptionValidation, (req: Request, res: Response) => {
+    // const newTitlePost = req.body.title;
+    // const newShortDescPost = req.body.shortDescription;
+    // const newContentPost = req.body.content;
     const newBloggersID = req.body.bloggerId;
     const blogger: {id: number, name: string, youtubeUrl: string} | undefined = bloggers.find(blogger => blogger.id === newBloggersID)
-    if (!newTitlePost || newTitlePost.length > 30) {
-        res.status(400).send({
-            errorsMessages: [
-            {
-                message: "Title has incorrect length",
-                field: "title"
-            }
-        ]
-        })
-        return;
-    }
-    if (typeof newTitlePost !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Title has incorrect value",
-                    field: "title"
-                }
-            ]
-        })
-        return;
-    }
-    if (!newShortDescPost || newShortDescPost.length > 100) {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "ShortDescription has incorrect length",
-                    field: "shortDescription"
-                }
-            ]
-        })
-        return;
-    }
-    if (typeof newShortDescPost !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "ShortDescription has incorrect value",
-                    field: "shortDescription"
-                }
-            ]
-        })
-        return;
-    }
-    if(!newContentPost || newContentPost.length > 1000) {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Content has incorrect length",
-                    field: "content"
-                }
-            ]
-        })
-        return;
-    }
-    if (typeof newContentPost !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Content has incorrect value",
-                    field: "content"
-                }
-            ]
-        })
-        return;
-    }
+    // if (!newTitlePost || newTitlePost.length > 30) {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //         {
+    //             message: "Title has incorrect length",
+    //             field: "title"
+    //         }
+    //     ]
+    //     })
+    //     return;
+    // }
+    // if (typeof newTitlePost !== 'string') {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "Title has incorrect value",
+    //                 field: "title"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (!newShortDescPost || newShortDescPost.length > 100) {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "ShortDescription has incorrect length",
+    //                 field: "shortDescription"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (typeof newShortDescPost !== 'string') {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "ShortDescription has incorrect value",
+    //                 field: "shortDescription"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if(!newContentPost || newContentPost.length > 1000) {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "Content has incorrect length",
+    //                 field: "content"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (typeof newContentPost !== 'string') {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "Content has incorrect value",
+    //                 field: "content"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
     if (!blogger) {
         res.sendStatus(404)
     }
+    const errors = myValidationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errorsMessages: errors.array({onlyFirstError: true})});
+    }
     const newPosts = {
         id: +(new Date()),
-        title: newTitlePost,
-        shortDescription: newShortDescPost,
-        content: newContentPost,
+        title: req.body.title,
+        shortDescription: req.body.shortDescription,
+        content: req.body.content,
         // @ts-ignore
         bloggerId: blogger.id,
         // @ts-ignore
@@ -265,11 +282,11 @@ app.get('/posts/:ID', (req: Request, res: Response) => {
 
 }) // status 400???
 
-app.put('/posts/:ID',(req: Request, res: Response) => {
+app.put('/posts/:ID', titleValidation, shortDescriptionValidation, contentDescriptionValidation, (req: Request, res: Response) => {
     const id = +req.params.ID;
-    const newTitlePost = req.body.title;
-    const newShortDescPost = req.body.shortDescription;
-    const newContentPost = req.body.content;
+    // const newTitlePost = req.body.title;
+    // const newShortDescPost = req.body.shortDescription;
+    // const newContentPost = req.body.content;
     const post: {
         id: number,
         title: string,
@@ -278,74 +295,78 @@ app.put('/posts/:ID',(req: Request, res: Response) => {
         bloggerId: number,
         bloggerName: string
     } | undefined = posts.find(post => post.id === id)
-    if (!newTitlePost || newTitlePost.length > 30) {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Title has incorrect length",
-                    field: "title"
-                }
-            ]
-        })
-        return;
-    }
-    if (typeof newTitlePost !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Title has incorrect value",
-                    field: "title"
-                }
-            ]
-        })
-        return;
-    }
-    if (!newShortDescPost || newShortDescPost.length > 100) {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "ShortDescription has incorrect length",
-                    field: "shortDescription"
-                }
-            ]
-        })
-        return;
-    }
-    if (typeof newShortDescPost !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "ShortDescription has incorrect value",
-                    field: "shortDescription"
-                }
-            ]
-        })
-        return;
-    }
-    if(!newContentPost || newContentPost.length > 1000) {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Content has incorrect length",
-                    field: "content"
-                }
-            ]
-        })
-        return;
-    }
-    if (typeof newContentPost !== 'string') {
-        res.status(400).send({
-            errorsMessages: [
-                {
-                    message: "Content has incorrect value",
-                    field: "content"
-                }
-            ]
-        })
-        return;
-    }
+    // if (!newTitlePost || newTitlePost.length > 30) {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "Title has incorrect length",
+    //                 field: "title"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (typeof newTitlePost !== 'string') {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "Title has incorrect value",
+    //                 field: "title"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (!newShortDescPost || newShortDescPost.length > 100) {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "ShortDescription has incorrect length",
+    //                 field: "shortDescription"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (typeof newShortDescPost !== 'string') {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "ShortDescription has incorrect value",
+    //                 field: "shortDescription"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if(!newContentPost || newContentPost.length > 1000) {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "Content has incorrect length",
+    //                 field: "content"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
+    // if (typeof newContentPost !== 'string') {
+    //     res.status(400).send({
+    //         errorsMessages: [
+    //             {
+    //                 message: "Content has incorrect value",
+    //                 field: "content"
+    //             }
+    //         ]
+    //     })
+    //     return;
+    // }
     if (!post) {
         res.sendStatus(404)
+    }
+    const errors = myValidationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errorsMessages: errors.array({onlyFirstError: true})});
     }
     // @ts-ignore
     post.title = req.body.title;
@@ -371,3 +392,50 @@ app.listen(port,() => {
     console.log(`Example App listening on port ${port}`)
 })
 
+// const newName = req.body.name;
+// const newYoutubeUrl = req.body.youtubeUrl;
+// const patternURL = new RegExp(/^https:\/\/([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$/);
+// if(!newName || newName.length > 15) {
+//     res.status(400).send({
+//         errorsMessages: [
+//             {
+//                 message: "Name has incorrect length",
+//                 field: "name"
+//             }
+//         ]
+//     })
+//     return;
+// }
+// if (typeof newName !== 'string') {
+//     res.status(400).send({
+//         errorsMessages: [
+//             {
+//                 message: "Name has incorrect value",
+//                 field: "name"
+//             }
+//         ]
+//     })
+//     return;
+// }
+// if (!newYoutubeUrl || newYoutubeUrl.length > 100 || !patternURL.test(newYoutubeUrl)) {
+//     res.status(400).send({
+//         errorsMessages: [
+//             {
+//                 message: "YoutubeUrl has incorrect length",
+//                 field: "youtubeUrl"
+//             }
+//         ]
+//     })
+//     return;
+// }
+// if (typeof newYoutubeUrl !== 'string') {
+//     res.status(400).send({
+//         errorsMessages: [
+//             {
+//                 message: "YoutubeUrl has incorrect value",
+//                 field: "youtubeUrl"
+//             }
+//         ]
+//     })
+//     return;
+// }
