@@ -223,6 +223,7 @@ app.get('/posts/:ID', (req: Request, res: Response) => {
 
 app.put('/posts/:ID', titleValidation, shortDescriptionValidation, contentDescriptionValidation, (req: Request, res: Response) => {
     const id = +req.params.ID;
+    const newBloggersID = req.body.bloggerId;
     const post: {
         id: number,
         title: string,
