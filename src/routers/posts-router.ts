@@ -98,8 +98,8 @@ postsRouter.put('/:ID',  titleValidation, shortDescriptionValidation, contentDes
     if (!errors.isEmpty()) {
         return res.status(400).json({ errorsMessages: errors.array({onlyFirstError: true})});
     }
-    const post = postsRepository.getPostById(+req.params.ID);
-    res.send(post)
+    // const post = postsRepository.getPostById(+req.params.ID);
+    // res.send(post)
     res.sendStatus(204)
 })
 
