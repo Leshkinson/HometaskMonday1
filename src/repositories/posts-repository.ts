@@ -66,7 +66,7 @@ export const postsRepository = {
             post.content = content;
             return errorObject;
         }
-            return false;
+            return errorObject;
     },
     deletePost(ID: number) {
         const id = ID;
