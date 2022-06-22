@@ -92,7 +92,15 @@ postsRouter.put('/:ID',  titleValidation, shortDescriptionValidation, contentDes
         return;
     }
     if (typeof updatePost !== "boolean" && updatePost?.post) {
-        res.sendStatus(404)
+        res.sendStatus(400).send({
+            errorsMessages: [
+                {
+                    message: "BloggerId not found",
+                    field: "bloggerId"
+                }
+            ]
+        })
+        return;
     }
     const errors = myValidationResult(req);
     if (!errors.isEmpty()) {
