@@ -71,10 +71,10 @@ export const postsRepository = {
     deletePost(ID: number) {
         const id = ID;
         const findPostId = posts.findIndex(post => post.id === id)
-        if (findPostId) {
-            posts.splice(findPostId, 1);
-            return true
+        if (findPostId === -1) {
+            return false;
         }
-        return false
+        posts.splice(findPostId, 1);
+        return true;
     }
 }
