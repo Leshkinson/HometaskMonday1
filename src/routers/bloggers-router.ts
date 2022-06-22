@@ -68,8 +68,8 @@ const updateBlogger = bloggersRepository.changeBlogger(+req.params.ID, req.body.
     if (!errors.isEmpty()) {
         return res.status(400).json({ errorsMessages: errors.array({onlyFirstError: true})});
     }
-    const blogger = bloggersRepository.getBloggerById(+req.body.ID);
-    res.send(blogger);
+    // const blogger = bloggersRepository.getBloggerById(+req.body.ID);
+    // res.send(blogger);
     res.sendStatus(204);
 })
 bloggersRouter.delete('/:ID', basicAuthorization, (req: Request, res: Response) => {
