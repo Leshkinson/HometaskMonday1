@@ -37,10 +37,11 @@ export const bloggersRepository = {
     deleteBlogger(ID: number) {
         const id = ID;
         const findBloggerId = bloggers.findIndex(blogger => blogger.id === id)
-        if (findBloggerId) {
+        if (findBloggerId === -1) {
+            return false;
+        } else {
             bloggers.splice(findBloggerId, 1);
             return true
         }
-        return false;
     }
 }
