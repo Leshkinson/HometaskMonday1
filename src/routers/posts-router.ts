@@ -76,11 +76,11 @@ postsRouter.get('/:ID', (req: Request, res: Response) => {
 
 postsRouter.put('/:ID',  titleValidation, shortDescriptionValidation, contentDescriptionValidation, basicAuthorization, (req: Request, res: Response) => {
     const updatePost = postsRepository.changePost(req.body.title, req.body.shortDescription, req.body.content, req.body.bloggerId, +req.params.ID)
-    if (!updatePost) {
-        res.sendStatus(404)
-        return;
-    }
-    if (!updatePost.blogger) {
+    // if (!updatePost) {
+    //     res.sendStatus(404)
+    //     return;
+    // }
+    if (typeof updatePost !== "boolean" && updatePost?.blogger === false) {
         res.status(400).send({
             errorsMessages: [
                 {
@@ -91,7 +91,7 @@ postsRouter.put('/:ID',  titleValidation, shortDescriptionValidation, contentDes
         })
         return;
     }
-    if (!updatePost.post) {
+    if (typeof updatePost !== "boolean" && updatePost?.post) {
         res.sendStatus(404)
     }
     const errors = myValidationResult(req);
